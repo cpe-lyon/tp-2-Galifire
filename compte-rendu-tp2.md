@@ -10,7 +10,7 @@
 
 3. La variable $LANG permet de définir la langue du système. La variable $PWD indique le chemin du dossier courant, et $OLDPWD celui du dossier précédent. La variable $SHELL indique le chemin ou se base l'invite de commandes.
 
-4. On entre `MY_VAR="" ; printenv MY_VAR` puis `echo $MY_VAR`.
+4. Pour créer une variable locale, on entre `MY_VAR="" ; printenv MY_VAR` puis `echo $MY_VAR`.
 
 5. La variable étant locale, il ne se passe rien lorsqu'on exécute `bash`, car la variable locale n'existe pas sur cette session.
 
@@ -18,7 +18,7 @@
 
 7. Pour créer cette variable, on entre la commande `export NOM="Raphaël DUMAS" ; printenv NOM`.
 
-8. La commande à entrer est `echo "Bonjour à vous $NOM"`.
+8. Pour afficher un message contenant une variable, la commande à entrer est `echo "Bonjour à vous $NOM"`.
 
 9. Si l'on affecte une valeur vide à une variable d'environnement, celle-ci existe quand même. Si on utilise la commande `unset`, cela transforme la variable en variable locale uniquement.
 
@@ -34,7 +34,7 @@ PASSWORD="123+aze"
 
 read -s -p "Mot de passe : " pwd
 
-if [ "$pwd" = "$PASSWORD" ] ; then
+if [ "$pwd" = "$PASSWORD" ] ; then #On vérifie si le mot de passe entré correspond à la variable définie
     echo "Mot de passe correct"
 else
     echo "Mot de passe incorrect"
@@ -45,20 +45,21 @@ fi
 ```bash
 #!/bin/bash
 
-read -p 'Entrez un nombre :' nb
-
 function is_number() {
     re='^[+-]?[0-9]+([.][0-9]+)?$'
-    if [[ $nb =~ $re ]] ; then
-        echo 'Réel'
+    if ! [[ $1 =~ $re ]] ; then #On vérifie si le paramètre passé est un nombre réel en le comparant au regedit
         return 1
     else
-        echo 'Irréel'
         return 0
     fi
 }
 
-is_number
+is_number $1
+if [ $? -eq 0 ] ; then #On a appellé la fonction et on vérifie la valeur selon le code d'erreur retourné par la fonction.
+    echo "Réel"
+else
+    echo "Pas réel"
+fi
 ```
 
 ## 4 - Contrôle d'utilisateur
@@ -87,7 +88,7 @@ fi
 function fact()
 {
     FACT=1
-    for (( i=1; i<n+1; i++ )) ; do
+    for (( i=1; i<$1+1; i++ )) ; do #On réalise une boucle de 1 qui s'incrémente à chaque tour jusqu'à atteindre le nombre passé en paramètre
         FACT=$(( FACT * i ))
     done
 echo "$FACT"
@@ -105,9 +106,9 @@ prix=$(((RANDOM % 1000 + 1))
 echo 'Entrez un nombre'
 read reponse
 
-while [ $reponse -ne $prix ]
+while [ $reponse -ne $prix ] #On fait tourner cette boucle tant que le nombre entré n'est pas égal à la valeur choisie aléatoirement dans les premières lignes du script
 do
-    if [ $reponse -lt $prix ]; then
+    if [ $reponse -lt $prix ]; then #On vérifie en fonction de l'entrée si le nombre est supérieur ou inférieur, pour indiquer le joueur.
         echo "C'est plus !"
     else
         echo "C'est plus !"
@@ -122,48 +123,55 @@ echo 'Gagné !'
 ```bash
 #!/bin/bash
 
-read "Entrez un premier nombre" n1
-read "Entrez un deuxième nombre" n2
-read "Entrez un troisième nombre" n3
 
-if [ n1 >= n2 ] ; then
-    if [ n1 >= n3 ] ; then
-        max=$n1
+function is_number() {
+    re='^[+-]?[0-9]+([.][0-9]+)?$'
+    if ! [[ $1 =~ $re ]] && [ $1 -ge -100 ] && [ $1 -le 100] ; then  #On vérifie si le paramètre passé est un nombre réel, compris en -100 et 100
+        return 1
+        fi
+    else
+        return 0
     fi
-fi
+}
 
-if [ n2 >= n1 ] ; then
-    if [ n2 >= n3 ] ; then
-        max=$n2
-    fi
-fi
+is_number 
+if [ $? -eq 0 ] ; then #On a appellé la fonction et on vérifie la valeur selon le code d'erreur retourné par la fonction.
 
-if [ n3 >= n2 ] ; then
-    if [ n3 >= n1 ] ; then
-        max=$n3
-    fi
-fi
+function stats() {
 
-if [ n1 <= n2 ] ; then
-    if [ n1 <= n3 ] ; then
-        min=$n1
-    fi
-fi
+    tab=()
+    for (( i=1; i<$1+1; i++ )) ; do
+        read -p "Entrez un nombre en -100 et 100 : " nb
+        is_number $nb
+        if [[ $? -eq 0 ]] ; then
+            $tab+=( $nb )
+        else
+            echo "La valeur entrée n'est pas correcte"
+        fi
+    done
 
-if [ n2 <= n1 ] ; then
-    if [ n2 <= n3 ] ; then
-        min=$n2
-    fi
-fi
+    max=$tab[0]
+    min=$tab[0]
+    moy=0
+    somme=0
 
-if [ n3 <= n2 ] ; then
-    if [ n3 <= n1 ] ; then
-        min=$n3
-    fi
-fi
+    for number in $tab ; do
+        if [[ $number -ge $max ]] ; then
+            $max=$number
+        fi
+        if [[ $number -le $min ]] ; then
+            $min=$number
+        fi
+        $somme+=$number
+    done
 
-moy=$( ( n1 + n2 + n3 ) / 3 )
+    $moy=$( somme/{tab[@]} )
 
-echo "Nombre minimal : $min"
-echo "Nombre maximal : $max"
-echo "Moyenne : $moy"
+    echo "Nombre maximal : $max"
+    echo "Nombre minimal : $min"
+    echo "Moyenne du tableau : $moy"
+
+}
+
+stats
+```
