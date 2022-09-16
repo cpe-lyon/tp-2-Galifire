@@ -134,44 +134,39 @@ function is_number() {
     fi
 }
 
-is_number 
-if [ $? -eq 0 ] ; then #On a appellé la fonction et on vérifie la valeur selon le code d'erreur retourné par la fonction.
-
 function stats() {
 
     tab=()
     for (( i=1; i<$1+1; i++ )) ; do
         read -p "Entrez un nombre en -100 et 100 : " nb
         is_number $nb
-        if [[ $? -eq 0 ]] ; then
-            $tab+=( $nb )
+        if [[ "$?" -eq 0 ]] ; then
+            tab+=("$nb")
         else
-            echo "La valeur entrée n'est pas correcte"
+            echo "Valeur incorrecte"
         fi
     done
 
-    max=$tab[0]
-    min=$tab[0]
+    max=${tab[0]}
+    min=${tab[0]}
     moy=0
     somme=0
 
-    for number in $tab ; do
+    for number in "${tab[@]}" ; do
         if [[ $number -ge $max ]] ; then
-            $max=$number
+            max=$number
         fi
         if [[ $number -le $min ]] ; then
-            $min=$number
+            min=$number
         fi
-        $somme+=$number
+        $somme=$(($somme+$number))
     done
+    tablength=${#tab[@]}
+    $moy=$(($somme/$tablength))
 
-    $moy=$( somme/{tab[@]} )
-
-    echo "Nombre maximal : $max"
-    echo "Nombre minimal : $min"
-    echo "Moyenne du tableau : $moy"
+    echo -e "Nombre maximal : $max\nNombre minimal : $min\nMoyenne du tableau : $moy"
 
 }
 
-stats
+stats $1
 ```
